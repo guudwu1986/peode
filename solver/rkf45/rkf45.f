@@ -180,6 +180,14 @@ c
       double precision y(neqn),t,tout,relerr,abserr,work(1)
 c
       external f
+      interface
+        subroutine f ( t , y , d )
+          implicit none
+          double precision , intent(in) :: t
+          double precision , intent(in) , dimension(:) :: y
+          double precision , intent(out) , dimension(:) :: d
+        end subroutine f
+      end interface
 c
       integer k1,k2,k3,k4,k5,k6,k1m
 c
@@ -231,6 +239,14 @@ c
      2  savae
 c
       external f
+      interface
+        subroutine f ( t , y , d )
+          implicit none
+          double precision , intent(in) :: t
+          double precision , intent(in) , dimension(:) :: y
+          double precision , intent(out) , dimension(:) :: d
+        end subroutine f
+      end interface
 c
       double precision  a,ae,dt,ee,eeoet,esttol,et,hmin,remin,rer,s,
      1  scale,tol,toln,twoeps,u26,ypk
@@ -580,6 +596,15 @@ c
       double precision  y(neqn),t,h,yp(neqn),f1(neqn),f2(neqn),
      1  f3(neqn),f4(neqn),f5(neqn),s(neqn)
 c
+      external f
+      interface
+        subroutine f ( t , y , d )
+          implicit none
+          double precision , intent(in) :: t
+          double precision , intent(in) , dimension(:) :: y
+          double precision , intent(out) , dimension(:) :: d
+        end subroutine f
+      end interface
       double precision  ch
       integer  k
 c
