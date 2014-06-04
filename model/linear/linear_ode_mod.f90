@@ -92,6 +92,8 @@ module Linear_Ode_mod
       , Constant &
       , Time_Point &
       , Tol &
+      , Iter &
+      , Info &
     )
 
     double precision , intent(out) , dimension(:,:) &
@@ -106,6 +108,10 @@ module Linear_Ode_mod
       :: Time_Point
     double precision , intent(in) &
       :: Tol
+    integer , intent(out) , dimension(:) &
+      :: Iter
+    integer , intent(out) , dimension(:) &
+      :: Info
 
     integer &
       :: ind
@@ -166,6 +172,8 @@ module Linear_Ode_mod
 
       Ode_Result(:,ind) = state
       time = Time_Point(ind)
+      Iter(ind) = work(1)
+      Info(ind) = iflag
 
     end do!}}}
 

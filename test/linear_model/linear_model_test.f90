@@ -30,6 +30,10 @@ program main
     :: initial
   double precision , dimension(:,:) , allocatable &
     :: ode_result
+  integer , dimension(:) , allocatable &
+    :: iter
+  integer , dimension(:) , allocatable &
+    :: info
 
   allocate ( time_point(dim_time) )
   time_point = (/ ( ind , ind=0,(dim_time-1) ) /)
@@ -40,6 +44,8 @@ program main
   allocate ( initial(dim_ode) )
   initial = (/ ( ind , ind=1,dim_ode ) /)
   allocate ( ode_result(dim_ode,dim_time) )
+  allocate ( iter(dim_time) )
+  allocate ( info(dim_time) )
 
   do ind = 1,dim_ode
     linear(ind,ind) = ind
@@ -54,9 +60,13 @@ program main
       , constant &
       , time_point &
       , tol &
+      , iter &
+      , info &
     )
 
   write(*,*) ode_result
+  write(*,*) iter
+  write(*,*) info
 
   stop
 
