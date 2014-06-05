@@ -1,3 +1,16 @@
+! Testing program for module Linear_Ode_mod
+
+! Read data from "data", compute solution, then compare to truth.
+
+! Order of file "data":
+!   Dimension of ODE
+!   Dimension of time
+!   Time points
+!   True solution
+!   Initial condition
+!   Linear term
+!   Constant term
+
 program main
 
   use Linear_Ode_mod
@@ -13,11 +26,13 @@ program main
 
   integer &
     :: ind
+  integer &
+    :: NUM_UNIT
 
   integer &
-    :: dim_ode = 3
+    :: dim_ode
   integer &
-    :: dim_time = 5
+    :: dim_time
   double precision , dimension(:) , allocatable &
     :: time_point
   double precision &
@@ -30,27 +45,42 @@ program main
     :: initial
   double precision , dimension(:,:) , allocatable &
     :: ode_result
+  double precision , dimension(:,:) , allocatable &
+    :: truth
   integer , dimension(:) , allocatable &
     :: iter
   integer , dimension(:) , allocatable &
     :: info
 
+! Initialization!{{{
+
+  open ( newunit = NUM_UNIT , file = 'data' ,&
+    action = 'read' , status = 'old' )
+
+  read ( NUM_UNIT , * ) dim_ode
+  read ( NUM_UNIT , * ) dim_time
+
   allocate ( time_point(dim_time) )
-  time_point = (/ ( ind , ind=0,(dim_time-1) ) /)
-  allocate ( linear(dim_ode,dim_ode) )
-  linear = 0
-  allocate ( constant(dim_ode) )
-  constant = 0
+  read ( NUM_UNIT , * ) time_point
+
+  allocate ( truth(dim_ode,dim_time) )
+  read ( NUM_UNIT , * ) truth
+
   allocate ( initial(dim_ode) )
-  initial = (/ ( ind , ind=1,dim_ode ) /)
+  read ( NUM_UNIT , * ) initial
+
+  allocate ( linear(dim_ode,dim_ode) )
+  read ( NUM_UNIT , * ) linear
+
+  allocate ( constant(dim_ode) )
+  read ( NUM_UNIT , * ) constant
+
+  close ( unit = NUM_UNIT )
+
   allocate ( ode_result(dim_ode,dim_time) )
   allocate ( iter(dim_time) )
   allocate ( info(dim_time) )
-
-  do ind = 1,dim_ode
-    linear(ind,ind) = ind
-    constant(ind) = ind
-  end do
+!}}}
 
   call OdeSolve &
     ( &
@@ -64,7 +94,8 @@ program main
       , info &
     )
 
-  write(*,*) ode_result
+  ode_result = ode_result - truth
+  write(*,*) sum(ode_result**2)
   write(*,*) iter
   write(*,*) info
 
