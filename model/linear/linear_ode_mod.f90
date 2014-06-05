@@ -154,6 +154,7 @@ module Linear_Ode_mod
     allocate ( iwork(5) )
 
     iflag = 1
+    iwork(1) = 0
 
     do ind = 1 , size(Time_Point)!{{{
 
@@ -172,7 +173,8 @@ module Linear_Ode_mod
 
       Ode_Result(:,ind) = state
       time = Time_Point(ind)
-      Iter(ind) = work(1)
+      Iter(ind) = iwork(1)
+      iwork(1) = 0
       Info(ind) = iflag
 
     end do!}}}
