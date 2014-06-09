@@ -1,3 +1,8 @@
+module aa_mod
+implicit none
+double precision :: aa = 4
+end module aa_mod
+
 subroutine calfun &
   ( &
     n , x , f &
@@ -24,8 +29,3 @@ subroutine calfun &
   end do
 
 end subroutine calfun
-
-module aa_mod
-implicit none
-double precision :: aa = 4
-end module aa_mod
