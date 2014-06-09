@@ -24,7 +24,7 @@ program main
 
   interface
     SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W)
-      IMPLICIT REAL*8 (A-H,O-Z)
+      IMPLICIT double precision (A-H,O-Z)
       DIMENSION X(*),W(*)
     end SUBROUTINE NEWUOA
   end interface
