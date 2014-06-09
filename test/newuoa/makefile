@@ -8,10 +8,10 @@ COMPILER=gfortran -fdefault-real-8
 STATIC_LIB_COMPILER=$(COMPILER) -c
 
 newuoa_test.out: bigden.o biglag.o newuoa.o newuob.o trsapp.o update.o \
-  calfun.o newuoa_test.o
+  newuoa_test.o
 	$(COMPILER) bigden.o biglag.o newuoa.o newuob.o \
 	  trsapp.o update.o \
-	  calfun.o newuoa_test.o \
+	  newuoa_test.o \
 	  -o newuoa_test.out
 
 bigden.o: $(PATH_NEWUOA)/bigden.f
@@ -32,12 +32,12 @@ trsapp.o: $(PATH_NEWUOA)/trsapp.f
 update.o: $(PATH_NEWUOA)/update.f
 	$(STATIC_LIB_COMPILER) $(PATH_NEWUOA)/update.f \
 	  -o update.o
-calfun.o: $(PATH_TEST)/calfun.f90
-	$(STATIC_LIB_COMPILER) $(PATH_TEST)/calfun.f90 \
-	  -o calfun.o
+#calfun.o: $(PATH_TEST)/calfun.f90
+#	$(STATIC_LIB_COMPILER) $(PATH_TEST)/calfun.f90 \
+#	  -o calfun.o
 newuoa_test.o: $(PATH_TEST)/newuoa_test.f90
 	$(STATIC_LIB_COMPILER) $(PATH_TEST)/newuoa_test.f90 \
 	  -o newuoa_test.o
 
 clear:
-	rm *.o *.out *.mod
+	rm *.o *.out

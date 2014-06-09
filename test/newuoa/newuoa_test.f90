@@ -23,9 +23,10 @@ program main
     :: w
 
   interface
-    SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W)
+    SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W,CALFUN)
       IMPLICIT double precision (A-H,O-Z)
       DIMENSION X(*),W(*)
+      external CALFUN
     end SUBROUTINE NEWUOA
   end interface
 
@@ -41,10 +42,38 @@ program main
       , iprint &
       , maxfun &
       , w &
+      , calfun &
     )
 
   write(*,*) x
 
   stop
+
+  contains
+
+  subroutine calfun &
+    ( &
+      n , x , f &
+    )
+
+    implicit none
+
+    integer , intent(in) &
+      :: n
+    double precision , intent(in) , dimension(n) &
+      :: x
+    double precision , intent(out) &
+      :: f
+
+    integer &
+      :: ind
+
+    f = ( x(1)-1 ) ** 2
+
+    do ind = 2 , n
+      f = f + (x(ind)-ind*x(ind-1))**2
+    end do
+
+  end subroutine calfun
 
 end program main

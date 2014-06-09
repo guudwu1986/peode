@@ -1,7 +1,15 @@
-      SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W)
+      SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W,CALFUN)
       IMPLICIT double precision (A-H,O-Z)
-      double precision :: X
       DIMENSION X(*),W(*)
+      external :: CALFUN
+      interface
+        subroutine calfun ( n , x , f )
+          implicit none
+          integer , intent(in) :: n
+          double precision , intent(in) , dimension(n) :: x
+          double precision , intent(out) :: f
+        end subroutine calfun
+      end interface
 C
 C     This subroutine seeks the least value of a function of many variables,
 C     by a trust region method that forms quadratic models by interpolation.
@@ -65,6 +73,6 @@ C     W plus the space that is needed by the last array of NEWUOB.
 C
       CALL NEWUOB (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W(IXB),
      1  W(IXO),W(IXN),W(IXP),W(IFV),W(IGQ),W(IHQ),W(IPQ),W(IBMAT),
-     2  W(IZMAT),NDIM,W(ID),W(IVL),W(IW))
+     2  W(IZMAT),NDIM,W(ID),W(IVL),W(IW),CALFUN)
    20 RETURN
       END

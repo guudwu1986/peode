@@ -1,8 +1,17 @@
       SUBROUTINE NEWUOB (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,XBASE,
-     1  XOPT,XNEW,XPT,FVAL,GQ,HQ,PQ,BMAT,ZMAT,NDIM,D,VLAG,W)
+     1  XOPT,XNEW,XPT,FVAL,GQ,HQ,PQ,BMAT,ZMAT,NDIM,D,VLAG,W,CALFUN)
       IMPLICIT double precision (A-H,O-Z)
       DIMENSION X(*),XBASE(*),XOPT(*),XNEW(*),XPT(NPT,*),FVAL(*),
      1  GQ(*),HQ(*),PQ(*),BMAT(NDIM,*),ZMAT(NPT,*),D(*),VLAG(*),W(*)
+      external calfun
+      interface
+        subroutine calfun ( n , x , f )
+          implicit none
+          integer , intent(in) :: n
+          double precision , intent(in) , dimension(n) :: x
+          double precision , intent(out) :: f
+        end subroutine calfun
+      end interface
 C
 C     The arguments N, NPT, X, RHOBEG, RHOEND, IPRINT and MAXFUN are identical
 C       to the corresponding arguments in SUBROUTINE NEWUOA.
