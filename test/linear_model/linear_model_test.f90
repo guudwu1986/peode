@@ -37,9 +37,9 @@ program main
     :: time_point
   double precision &
     :: tol = 1e-8
-  double precision , dimension(:,:) , allocatable &
+  double precision , dimension(:,:) , allocatable , target &
     :: linear
-  double precision , dimension(:) , allocatable &
+  double precision , dimension(:) , allocatable , target &
     :: constant
   double precision , dimension(:) , allocatable &
     :: initial

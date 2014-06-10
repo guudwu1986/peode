@@ -21,9 +21,9 @@ module Linear_Ode_mod
     :: OdeSolve
 
   ! Member variables!{{{
-  double precision , dimension(:,:) , allocatable &
+  double precision , dimension(:,:) , pointer &
     :: m_linear
-  double precision , dimension(:) , allocatable &
+  double precision , dimension(:) , pointer &
     :: m_constant
 !}}}
 
@@ -100,9 +100,9 @@ module Linear_Ode_mod
       :: Ode_Result
     double precision , intent(in) , dimension(:) &
       :: Initial
-    double precision , intent(in) , dimension(:,:) &
+    double precision , intent(in) , dimension(:,:) , target &
       :: Linear
-    double precision , intent(in) , dimension(:) &
+    double precision , intent(in) , dimension(:) , target &
       :: Constant
     double precision , intent(in) , dimension(:) &
       :: Time_Point
@@ -135,16 +135,8 @@ module Linear_Ode_mod
       end subroutine rkf45
     end interface
 
-    if ( allocated(m_linear) ) then
-      deallocate(m_linear)
-    end if
-    if ( allocated(m_constant) ) then
-      deallocate(m_constant)
-    end if
-    allocate ( m_linear(size(Linear,1),size(Linear,2)) )
-    allocate ( m_constant(size(Constant)) )
-    m_linear = Linear
-    m_constant = Constant
+    m_linear => Linear
+    m_constant => Constant
 
     allocate ( state(size(Initial)) )
     state = Initial
