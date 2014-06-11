@@ -5,12 +5,12 @@
      1  GQ(*),HQ(*),PQ(*),BMAT(NDIM,*),ZMAT(NPT,*),D(*),VLAG(*),W(*)
       external calfun
       interface
-        subroutine calfun ( n , x , f )
+        subroutine CALFUN ( N , X , F )
           implicit none
-          integer , intent(in) :: n
-          double precision , intent(in) , dimension(n) :: x
-          double precision , intent(out) :: f
-        end subroutine calfun
+          integer , intent(in) :: N
+          double precision , intent(in) , dimension(N) :: X
+          double precision , intent(out) :: F
+        end subroutine CALFUN
       end interface
 C
 C     The arguments N, NPT, X, RHOBEG, RHOEND, IPRINT and MAXFUN are identical
