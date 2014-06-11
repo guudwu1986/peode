@@ -84,7 +84,9 @@ program main
 
   call OdeSolve &
     ( &
-      ode_result &
+      dim_ode &
+      , dim_time &
+      , ode_result &
       , initial &
       , linear &
       , constant &

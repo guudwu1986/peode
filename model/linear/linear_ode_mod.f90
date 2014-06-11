@@ -20,7 +20,7 @@ module Linear_Ode_mod
   public &
     :: OdeSolve
 
-  ! Member variables!{{{
+! Member variables!{{{
   double precision , dimension(:,:) , pointer &
     :: m_linear
   double precision , dimension(:) , pointer &
@@ -86,7 +86,9 @@ module Linear_Ode_mod
 
   subroutine OdeSolve &!{{{
     ( &
-      Ode_Result &
+      Dim_Ode &
+      , Dim_Time &
+      , Ode_Result &
       , Initial &
       , Linear &
       , Constant &
@@ -96,34 +98,38 @@ module Linear_Ode_mod
       , Info &
     )
 
-    double precision , intent(out) , dimension(:,:) &
+    integer , intent(in) &
+      :: Dim_Ode
+    integer , intent(in) &
+      :: Dim_Time
+    double precision , intent(out) , dimension(Dim_Ode,Dim_Time) &
       :: Ode_Result
-    double precision , intent(in) , dimension(:) &
+    double precision , intent(in) , dimension(Dim_Ode) &
       :: Initial
-    double precision , intent(in) , dimension(:,:) , target &
+    double precision , intent(in) , dimension(Dim_Ode,Dim_Ode) , target &
       :: Linear
-    double precision , intent(in) , dimension(:) , target &
+    double precision , intent(in) , dimension(Dim_Ode) , target &
       :: Constant
-    double precision , intent(in) , dimension(:) &
+    double precision , intent(in) , dimension(Dim_Time) &
       :: Time_Point
     double precision , intent(in) &
       :: Tol
-    integer , intent(out) , dimension(:) &
+    integer , intent(out) , dimension(Dim_Time) &
       :: Iter
-    integer , intent(out) , dimension(:) &
+    integer , intent(out) , dimension(Dim_Time) &
       :: Info
 
     integer &
       :: ind
-    double precision , dimension(:) , allocatable &
+    double precision , dimension(Dim_Ode) &
       :: state
     double precision &
       :: time
     integer &
       :: iflag
-    double precision , dimension(:) , allocatable &
+    double precision , dimension(3+6*Dim_Ode) &
       :: work
-    integer , dimension(:) , allocatable &
+    integer , dimension(5) &
       :: iwork
 
     interface
@@ -138,12 +144,8 @@ module Linear_Ode_mod
     m_linear => Linear
     m_constant => Constant
 
-    allocate ( state(size(Initial)) )
     state = Initial
     time = time_point(1)
-
-    allocate ( work(3+6*size(Initial)) )
-    allocate ( iwork(5) )
 
     iflag = 1
     iwork(1) = 0
