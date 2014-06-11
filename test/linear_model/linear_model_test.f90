@@ -37,15 +37,15 @@ program main
     :: time_point
   double precision &
     :: tol = 1e-8
-  double precision , dimension(:,:) , allocatable , target &
+  double precision , dimension(:) , allocatable , target &
     :: linear
   double precision , dimension(:) , allocatable , target &
     :: constant
   double precision , dimension(:) , allocatable &
     :: initial
-  double precision , dimension(:,:) , allocatable &
+  double precision , dimension(:) , allocatable &
     :: ode_result
-  double precision , dimension(:,:) , allocatable &
+  double precision , dimension(:) , allocatable &
     :: truth
   integer , dimension(:) , allocatable &
     :: iter
@@ -63,13 +63,13 @@ program main
   allocate ( time_point(dim_time) )
   read ( NUM_UNIT , * ) time_point
 
-  allocate ( truth(dim_ode,dim_time) )
+  allocate ( truth(dim_ode*dim_time) )
   read ( NUM_UNIT , * ) truth
 
   allocate ( initial(dim_ode) )
   read ( NUM_UNIT , * ) initial
 
-  allocate ( linear(dim_ode,dim_ode) )
+  allocate ( linear(dim_ode*dim_ode) )
   read ( NUM_UNIT , * ) linear
 
   allocate ( constant(dim_ode) )
@@ -77,7 +77,7 @@ program main
 
   close ( unit = NUM_UNIT )
 
-  allocate ( ode_result(dim_ode,dim_time) )
+  allocate ( ode_result(dim_ode*dim_time) )
   allocate ( iter(dim_time) )
   allocate ( info(dim_time) )
 !}}}

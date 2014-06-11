@@ -102,11 +102,12 @@ module Linear_Ode_mod
       :: Dim_Ode
     integer , intent(in) &
       :: Dim_Time
-    double precision , intent(out) , dimension(Dim_Ode,Dim_Time) &
+    double precision , intent(out) , dimension(Dim_Ode*Dim_Time) &
+      , target &
       :: Ode_Result
     double precision , intent(in) , dimension(Dim_Ode) &
       :: Initial
-    double precision , intent(in) , dimension(Dim_Ode,Dim_Ode) , target &
+    double precision , intent(in) , dimension(Dim_Ode*Dim_Ode) , target &
       :: Linear
     double precision , intent(in) , dimension(Dim_Ode) , target &
       :: Constant
@@ -132,6 +133,9 @@ module Linear_Ode_mod
     integer , dimension(5) &
       :: iwork
 
+    double precision , dimension(:,:) , pointer &
+      :: p_ode_result
+
     interface
       subroutine rkf45 &
         (f,neqn,y,t,tout,relerr,abserr,iflag,work,iwork)
@@ -141,7 +145,7 @@ module Linear_Ode_mod
       end subroutine rkf45
     end interface
 
-    m_linear => Linear
+    m_linear ( 1:Dim_Ode , 1:Dim_Ode ) => Linear
     m_constant => Constant
 
     state = Initial
@@ -149,6 +153,8 @@ module Linear_Ode_mod
 
     iflag = 1
     iwork(1) = 0
+
+    p_ode_result ( 1:Dim_Ode , 1:Dim_Time ) => Ode_Result
 
     do ind = 1 , size(Time_Point)!{{{
 
@@ -165,7 +171,7 @@ module Linear_Ode_mod
         , iwork &
       )
 
-      Ode_Result(:,ind) = state
+      p_ode_result(:,ind) = state
       time = Time_Point(ind)
       Iter(ind) = iwork(1)
       iwork(1) = 0
