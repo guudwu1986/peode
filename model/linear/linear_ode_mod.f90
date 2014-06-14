@@ -4,17 +4,12 @@
 !   Solve a system.
 ! Rkf45Derivative:
 !   Derivative function called by Rkf45-solver.
-! SetParameter:
-!   Not used currently.
-!   Set member variables, which are used by "Rkf45Derivative".
 
 module Linear_Ode_mod
 
   implicit none
   private
 
-!  public &
-!    :: SetParameter
 !  public &
 !    :: Rkf45Derivative
   public &
@@ -28,35 +23,6 @@ module Linear_Ode_mod
 !}}}
 
   contains
-
-!  subroutine SetParameter &!{{{
-!    ( &
-!      Linear &
-!      , Constant &
-!    )
-!
-!    implicit none
-!
-!    double precision , intent(in) , dimension(:,:) &
-!      :: Linear
-!    double precision , intent(in) , dimension(:) &
-!      :: Constant
-!
-!    if ( allocated(m_linear) ) then
-!      deallocate(m_linear)
-!    end if
-!    if ( allocated(m_constant) ) then
-!      deallocate(m_constant)
-!    end if
-!
-!    allocate ( m_linear(size(Linear,1),size(Linear,2)) )
-!    allocate ( m_constant(size(Constant)) )
-!    m_linear = Linear
-!    m_constant = Constant
-!
-!    return
-!
-!  end subroutine SetParameter!}}}
 
   subroutine Rkf45Derivative &!{{{
     ( &
