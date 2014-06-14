@@ -3,7 +3,7 @@ all: linear_model_test.out
 PATH_ROOT=$(PEODE)
 PATH_RKF45=$(PATH_ROOT)/solver/rkf45
 PATH_LINEAR_MODEL=$(PATH_ROOT)/model/linear
-PATH_TEST=$(PATH_ROOT)/test/linear_model
+PATH_TEST=$(PATH_ROOT)/test/linear_model/full
 
 COMPILER=gfortran -fdefault-real-8
 STATIC_LIB_COMPILER=$(COMPILER) -c

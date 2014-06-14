@@ -1,4 +1,4 @@
-! Testing program for module Linear_Ode_mod
+! Testing program for "OdeSolve" in module Linear_Ode_mod
 
 ! Read data from "data", compute solution, then compare to truth.
 
