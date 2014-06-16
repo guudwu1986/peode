@@ -16,14 +16,6 @@ program main
   use Linear_Ode_mod
   implicit none
 
-  interface
-    subroutine rkf45(f,neqn,y,t,tout,relerr,abserr,iflag,work,iwork)
-      integer neqn,iflag,iwork(5)
-      double precision y(neqn),t,tout,relerr,abserr,work(1)
-      external f
-    end subroutine rkf45
-  end interface
-
   integer &
     :: ind
   integer &
