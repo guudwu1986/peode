@@ -1,26 +1,26 @@
-all: linear_inverse_newuoa_test.out
+all: linear_inverse_newuoa_full_test.out
 
 PATH_ROOT=$(PEODE)
 PATH_RKF45=$(PATH_ROOT)/solver/rkf45
 PATH_NEWUOA=$(PATH_ROOT)/solver/newuoa_dp
 PATH_LINEAR_MODEL=$(PATH_ROOT)/model/linear
 PATH_LINEAR_INVERSE=$(PATH_ROOT)/solver/linear_inverse
-PATH_TEST=$(PATH_ROOT)/test/linear_inverse/newuoa
+PATH_TEST=$(PATH_ROOT)/test/linear_inverse/newuoa_full
 
 COMPILER=gfortran -fdefault-real-8
 STATIC_LIB_COMPILER=$(COMPILER) -c
 
-linear_inverse_newuoa_test.out: rkf45.o machine.o \
+linear_inverse_newuoa_full_test.out: rkf45.o machine.o \
   bigden.o biglag.o newuoa.o newuob.o trsapp.o update.o \
   linear_ode_mod.o \
   linear_inverse_mod.o \
-  linear_inverse_newuoa_test.o
+  linear_inverse_newuoa_full_test.o
 	$(COMPILER) rkf45.o machine.o \
 	  bigden.o biglag.o newuoa.o newuob.o trsapp.o update.o \
 	  linear_ode_mod.o \
 	  linear_inverse_mod.o \
-	  linear_inverse_newuoa_test.o \
-	  -o linear_inverse_newuoa_test.out
+	  linear_inverse_newuoa_full_test.o \
+	  -o linear_inverse_newuoa_full_test.out
 
 rkf45.o: $(PATH_RKF45)/rkf45.f
 	$(STATIC_LIB_COMPILER) $(PATH_RKF45)/rkf45.f \
@@ -53,11 +53,11 @@ linear_inverse_mod.o: $(PATH_LINEAR_INVERSE)/linear_inverse_mod.f90
 	$(STATIC_LIB_COMPILER) \
 	  $(PATH_LINEAR_INVERSE)/linear_inverse_mod.f90 \
 	  -o linear_inverse_mod.o
-linear_inverse_newuoa_test.o: \
-  $(PATH_TEST)/linear_inverse_newuoa_test.f90
+linear_inverse_newuoa_full_test.o: \
+  $(PATH_TEST)/linear_inverse_newuoa_full_test.f90
 	$(STATIC_LIB_COMPILER) \
-	  $(PATH_TEST)/linear_inverse_newuoa_test.f90 \
-	  -o linear_inverse_newuoa_test.o
+	  $(PATH_TEST)/linear_inverse_newuoa_full_test.f90 \
+	  -o linear_inverse_newuoa_full_test.o
 
 clear:
 	rm *.o *.out *.mod
