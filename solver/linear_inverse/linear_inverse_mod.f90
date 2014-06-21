@@ -1,3 +1,11 @@
+! A module to solve a linear-ODE inverse problem
+
+! Public subroutine:
+!   InverseNewuoa:
+!     Solve a linear-ODE system via NEWUOA-solver.
+!   InverseNewuoaSparse:
+!     Solve a sparse linear-ODE system via NEWUOA-solver.
+
 module Linear_Ode_Inverse_mod
 
   use Linear_Ode_mod
