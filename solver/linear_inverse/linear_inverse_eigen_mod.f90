@@ -15,12 +15,15 @@ module Linear_Ode_Inverse_Eigen_mod
   implicit none
   private
 
-  public &
-    :: ResidualSumOfSquares
+!  public &
+!    :: ResidualSumOfSquares
 !  public &
 !    :: ResidueNewuoaObjective
 !  public &
 !    :: InverseEigen
+
+  public &
+    :: TestResidueNewuoaObjective
 
   integer &
     :: m_dim_time
@@ -167,5 +170,118 @@ module Linear_Ode_Inverse_Eigen_mod
     return
 
   end subroutine ResidualSumOfSquares!}}}
+
+  subroutine ResidueNewuoaObjective &!{{{
+    ( &
+      N , X , F &
+    )
+
+    implicit none
+
+    integer , intent(in) :: N
+    double precision , intent(in) , dimension(N) :: X
+    double precision , intent(out) :: F
+
+    call ResidualSumOfSquares &
+      ( &
+        N &
+        , m_dim_time &
+        , X * mp_scaling &
+        , mp_timepoint &
+        , mp_observation &
+        , m_ridge_parameter &
+        , F &
+      )
+
+    return
+
+  end subroutine ResidueNewuoaObjective!}}}
+
+  subroutine TestResidueNewuoaObjective &!{{{
+    ( &
+      Dim_Ode &
+      , Dim_Time &
+      , Eigen &
+      , Scaling &
+      , Timepoint &
+      , Observation &
+      , Ridge_Parameter &
+    )
+
+    implicit none
+
+    integer , intent(in) &
+      :: Dim_Ode
+    integer , intent(in) &
+      :: Dim_Time
+    double precision , dimension(Dim_Ode) , intent(inout) &
+      :: Eigen
+    double precision , dimension(Dim_Ode) , intent(in) , target &
+      :: Scaling
+    double precision , dimension(Dim_Time) , intent(in) , target &
+      :: Timepoint
+    double precision , dimension(Dim_Ode*Dim_Time) , intent(in) &
+      , target &
+      :: Observation
+    double precision , intent(in) &
+      :: Ridge_Parameter
+
+    double precision &
+      :: f
+
+    m_dim_time = Dim_Time
+    m_ridge_parameter = Ridge_Parameter
+
+    mp_scaling => Scaling
+    mp_timepoint => Timepoint
+    mp_observation => Observation
+
+    call ResidueNewuoaObjective ( Dim_Ode , Eigen , f )
+
+    write(*,*) f
+
+    return
+
+  end subroutine TestResidueNewuoaObjective!}}}
+
+  subroutine InverseEigen &!{{{
+    ( &
+      Dim_Ode &
+      , Dim_Time &
+      , Eigen &
+      , Scaling &
+      , Timepoint &
+      , Observation &
+      , Ridge_Parameter &
+    )
+
+    implicit none
+
+    integer , intent(in) &
+      :: Dim_Ode
+    integer , intent(in) &
+      :: Dim_Time
+    double precision , dimension(Dim_Ode) , intent(inout) &
+      :: Eigen
+    double precision , dimension(Dim_Ode) , intent(in) , target &
+      :: Scaling
+    double precision , dimension(Dim_Time) , intent(in) , target &
+      :: Timepoint
+    double precision , dimension(Dim_Ode*Dim_Time) , intent(in) &
+      , target &
+      :: Observation
+    double precision , intent(in) &
+      :: Ridge_Parameter
+
+    m_dim_time = Dim_Time
+    m_ridge_parameter = Ridge_Parameter
+
+    mp_scaling => Scaling
+    mp_timepoint => Timepoint
+    mp_observation => Observation
+
+    return
+
+  end subroutine InverseEigen!}}}
 
 end module Linear_Ode_Inverse_Eigen_mod
