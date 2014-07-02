@@ -1,10 +1,14 @@
 ! Test program for "ResidualSumOfSquares" of module
 ! "Linear_Ode_Inverse_Eigen_mod"
 
-! Start from eigenvalues to reconstruct the system,
+! Start from true eigenvalues to reconstruct the system,
 ! the calculate the discrepancy between the system curve and
 ! true observation,
 ! which should be close to 0.
+
+! Or use 0-eigenvalues, with 2 time-points,
+! then uncomment "zero_rss" block in "ResidualSumOfSquares"
+! should give two close values.
 
 program main
 
@@ -60,6 +64,8 @@ program main
 
   close ( unit = NUM_UNIT )
 !}}}
+
+!  eigen = 0
 
   call ResidualSumOfSquares &
     ( &
