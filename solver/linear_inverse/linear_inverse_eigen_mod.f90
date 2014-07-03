@@ -18,12 +18,12 @@ module Linear_Ode_Inverse_Eigen_mod
   implicit none
   private
 
-  public &
-    :: ResidualSumOfSquares
+!  public &
+!    :: ResidualSumOfSquares
 !  public &
 !    :: ResidueNewuoaObjective
-!  public &
-!    :: InverseEigen
+  public &
+    :: InverseEigen
 
 !  public &
 !    :: TestResidueNewuoaObjective
@@ -266,81 +266,81 @@ module Linear_Ode_Inverse_Eigen_mod
 !
 !  end subroutine TestResidueNewuoaObjective!}}}
 
-!  subroutine InverseEigen &!{{{
-!    ( &
-!      Dim_Ode &
-!      , Dim_Time &
-!      , Eigen &
-!      , Scaling &
-!      , Timepoint &
-!      , Observation &
-!      , Ridge_Parameter &
-!      , Rhobeg &
-!      , Rhoend &
-!      , Maxfun &
-!    )
-!
-!    implicit none
-!
-!    integer , intent(in) &
-!      :: Dim_Ode
-!    integer , intent(in) &
-!      :: Dim_Time
-!    double precision , dimension(Dim_Ode) , intent(inout) &
-!      :: Eigen
-!    double precision , dimension(Dim_Ode) , intent(in) , target &
-!      :: Scaling
-!    double precision , dimension(Dim_Time) , intent(in) , target &
-!      :: Timepoint
-!    double precision , dimension(Dim_Ode*Dim_Time) , intent(in) &
-!      , target &
-!      :: Observation
-!    double precision , intent(in) &
-!      :: Ridge_Parameter
-!    double precision , intent(in) &
-!      :: Rhobeg
-!    double precision , intent(in) &
-!      :: Rhoend
-!    integer , intent(in) &
-!      :: Maxfun
-!
-!    integer &
-!      :: iprint = 3
-!
-!    double precision , &
-!      dimension ( (15*Dim_Ode+97)*Dim_Ode/2+14 ) &
-!      :: work
-!
-!    interface
-!      SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W,CALFUN)
-!        IMPLICIT double precision (A-H,O-Z)
-!        DIMENSION X(*),W(*)
-!        external CALFUN
-!      end SUBROUTINE NEWUOA
-!    end interface
-!
-!    m_dim_time = Dim_Time
-!    m_ridge_parameter = Ridge_Parameter
-!
-!    mp_scaling => Scaling
-!    mp_timepoint => Timepoint
-!    mp_observation => Observation
-!
-!    call newuoa &
-!      ( &
-!        Dim_Ode &
-!        , 2*Dim_Ode+1 &
-!        , Eigen &
-!        , Rhobeg &
-!        , Rhoend &
-!        , iprint &
-!        , Maxfun &
-!        , work &
-!        , ResidueNewuoaObjective &
-!      )
-!
-!    return
-!
-!  end subroutine InverseEigen!}}}
+  subroutine InverseEigen &!{{{
+    ( &
+      Dim_Ode &
+      , Dim_Time &
+      , Eigen &
+      , Scaling &
+      , Timepoint &
+      , Observation &
+      , Ridge_Parameter &
+      , Rhobeg &
+      , Rhoend &
+      , Maxfun &
+    )
+
+    implicit none
+
+    integer , intent(in) &
+      :: Dim_Ode
+    integer , intent(in) &
+      :: Dim_Time
+    double precision , dimension(Dim_Ode) , intent(inout) &
+      :: Eigen
+    double precision , dimension(Dim_Ode) , intent(in) , target &
+      :: Scaling
+    double precision , dimension(Dim_Time) , intent(in) , target &
+      :: Timepoint
+    double precision , dimension(Dim_Ode*Dim_Time) , intent(in) &
+      , target &
+      :: Observation
+    double precision , intent(in) &
+      :: Ridge_Parameter
+    double precision , intent(in) &
+      :: Rhobeg
+    double precision , intent(in) &
+      :: Rhoend
+    integer , intent(in) &
+      :: Maxfun
+
+    integer &
+      :: iprint = 3
+
+    double precision , &
+      dimension ( (15*Dim_Ode+97)*Dim_Ode/2+14 ) &
+      :: work
+
+    interface
+      SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W,CALFUN)
+        IMPLICIT double precision (A-H,O-Z)
+        DIMENSION X(*),W(*)
+        external CALFUN
+      end SUBROUTINE NEWUOA
+    end interface
+
+    m_dim_time = Dim_Time
+    m_ridge_parameter = Ridge_Parameter
+
+    mp_scaling => Scaling
+    mp_timepoint => Timepoint
+    mp_observation => Observation
+
+    call newuoa &
+      ( &
+        Dim_Ode &
+        , 2*Dim_Ode+1 &
+        , Eigen &
+        , Rhobeg &
+        , Rhoend &
+        , iprint &
+        , Maxfun &
+        , work &
+        , ResidueNewuoaObjective &
+      )
+
+    return
+
+  end subroutine InverseEigen!}}}
 
 end module Linear_Ode_Inverse_Eigen_mod
