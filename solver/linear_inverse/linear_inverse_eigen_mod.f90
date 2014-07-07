@@ -28,10 +28,10 @@ module Linear_Ode_Inverse_Eigen_mod
 !    :: ResidualSumOfSquares
 !  public &
 !    :: ResidueNewuoaObjective
+!  public &
+!    :: ConstructODE
   public &
     :: InverseEigen
-  public &
-    :: ConstructODE
 
 !  public &
 !    :: TestResidueNewuoaObjective
@@ -305,7 +305,7 @@ subroutine ConstructODE &!{{{
     :: Dim_Ode
   integer , intent(in) &
     :: Dim_Time
-  double precision , dimension(Dim_Ode) , intent(inout) &
+  double precision , dimension(Dim_Ode) , intent(in) &
     :: Eigen
   double precision , dimension(Dim_Time) , intent(in) , target &
     :: Timepoint
@@ -610,9 +610,9 @@ subroutine InverseEigen &!{{{
     , Rhobeg &
     , Rhoend &
     , Maxfun &
-!    , Linear &
-!    , Initial &
-!    , Curve &
+    , Linear &
+    , Initial &
+    , Curve &
   )
 
   implicit none
@@ -638,9 +638,17 @@ subroutine InverseEigen &!{{{
     :: Rhoend
   integer , intent(in) &
     :: Maxfun
+  double precision , dimension(Dim_Ode*Dim_Ode) , intent(out) &
+    :: Linear
+  double precision , dimension(Dim_Ode) , intent(out) &
+    :: Initial
+  double precision , dimension(Dim_Ode*Dim_Time) , intent(out) &
+    :: Curve
 
   integer &
     :: iprint = 3
+  integer &
+    :: info
 
   double precision , &
     dimension ( (15*Dim_Ode+97)*Dim_Ode/2+14 ) &
@@ -672,6 +680,20 @@ subroutine InverseEigen &!{{{
       , Maxfun &
       , work &
       , ResidueNewuoaObjective &
+    )
+
+  call ConstructODE &
+    ( &
+      Dim_Ode &
+      , Dim_Time &
+      , Eigen*Scaling &
+      , Timepoint &
+      , Observation &
+      , Ridge_Parameter &
+      , Linear &
+      , Initial &
+      , Curve &
+      , info &
     )
 
   return

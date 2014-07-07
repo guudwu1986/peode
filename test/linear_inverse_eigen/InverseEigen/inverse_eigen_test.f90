@@ -35,6 +35,13 @@ program main
   integer &
     :: maxfun = 1000
 
+  double precision , dimension(:) , allocatable &
+    :: linear_e
+  double precision , dimension(:) , allocatable &
+    :: initial_e
+  double precision , dimension(:) , allocatable &
+    :: curve_e
+
 ! Read!{{{
 
   open ( newunit = NUM_UNIT , file = 'data' ,&
@@ -64,7 +71,10 @@ program main
   close ( unit = NUM_UNIT )
 !}}}
 
-write(*,*) scaling
+  allocate ( linear_e ( dim_ode*dim_ode ) )
+  allocate ( initial_e ( dim_ode ) )
+  allocate ( curve_e ( dim_ode*dim_time ) )
+
   call InverseEigen &
     ( &
       dim_ode &
@@ -77,9 +87,14 @@ write(*,*) scaling
       , rhobeg &
       , rhoend &
       , maxfun &
+      , linear_e &
+      , initial_e &
+      , curve_e &
     )
 
-  write(*,*) eigen
+  write(*,*) maxval ( abs ( linear_e - linear ) )
+  write(*,*) maxval ( abs ( initial_e - initial ) )
+  write(*,*) maxval ( abs ( curve_e - observation ) )
 
   stop
 
