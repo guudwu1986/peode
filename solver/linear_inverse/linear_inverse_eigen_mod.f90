@@ -12,6 +12,9 @@
 ! TestResidueNewuoaObjective:
 !   A wrapper for "ResidueNewuoaObjective" testing.
 !   Should be commented.
+! ConstructODE:
+!   A private subroutine to construct an ODE system
+!   from given eigenvalues.
 ! InverseEigen:
 !   A public subroutine to compute an ODE inverse problem
 !   via eigenvalue-updating.
@@ -292,6 +295,7 @@ subroutine ConstructODE &!{{{
     , Ridge_Parameter &
     , Linear &
     , Initial &
+    , Curve &
     , Info &
   )
 
@@ -315,6 +319,9 @@ subroutine ConstructODE &!{{{
     :: Linear
   double precision , dimension(Dim_Ode) , intent(out) &
     :: Initial
+  double precision , dimension(Dim_Ode*Dim_Time) , intent(out) &
+    , target &
+    :: Curve
   integer , intent(out) &
     :: Info
 ! 0: Normal
@@ -336,6 +343,8 @@ subroutine ConstructODE &!{{{
 
   double precision , dimension(:) , allocatable &
     :: work
+  double precision , dimension(:) , allocatable &
+    :: work2
   integer , dimension(:) , allocatable &
     :: iwork
   integer &
@@ -349,6 +358,8 @@ subroutine ConstructODE &!{{{
     :: p_linear
   double precision , dimension(:,:) , pointer &
     :: p_observation
+  double precision , dimension(:,:) , pointer &
+    :: p_curve
 
 ! Main target:
 !   Compute similarity transformation operator S and inverse
@@ -357,6 +368,7 @@ subroutine ConstructODE &!{{{
 
   p_linear ( 1:Dim_Ode , 1:Dim_Ode ) => Linear
   p_observation ( 1:Dim_Ode , 1:Dim_Time ) => Observation
+  p_curve ( 1:Dim_Ode , 1:Dim_Time ) => Curve
   Info = 0
 
 ! Generate basis:
@@ -365,25 +377,35 @@ subroutine ConstructODE &!{{{
 !   used for ridge regression.
 !   Generate Sigma, stored in Linear.
 !   Generate Initial.
+!   Generate Curve.
 
   basis = 0
   p_linear = 0
   Initial = 0
+  p_curve = 0
 
   allocate ( work(Dim_Time) )
+  allocate ( work2(Dim_Time) )
   do ind = 1 , Dim_Ode/2
     work = dexp ( Eigen(ind) * Timepoint )
-    basis ( 1:Dim_Time , 2*ind-1 ) &
-      = work * dsin ( Eigen(ind+Dim_Ode/2) * Timepoint )
-    basis ( 1:Dim_Time , 2*ind ) &
-      = work * dcos ( Eigen(ind+Dim_Ode/2) * Timepoint )
+
+    work2 = work * dsin ( Eigen(ind+Dim_Ode/2) * Timepoint )
+    basis ( 1:Dim_Time , 2*ind-1 ) = work2
+    p_curve ( 2*ind-1 , 1:Dim_Time ) = work2
+
+    work2 = work * dcos ( Eigen(ind+Dim_Ode/2) * Timepoint )
+    basis ( 1:Dim_Time , 2*ind ) = work2
+    p_curve ( 2*ind , 1:Dim_Time ) = work2
+
     p_linear ( 2*ind-1 , 2*ind-1 ) = Eigen(ind)
     p_linear ( 2*ind , 2*ind ) = Eigen(ind)
     p_linear ( 2*ind-1 , 2*ind ) = Eigen(ind+Dim_Ode/2)
     p_linear ( 2*ind , 2*ind-1 ) = -Eigen(ind+Dim_Ode/2)
+
     Initial ( 2*ind ) = 1
   end do
   deallocate ( work )
+  deallocate ( work2 )
 
   do ind = 1 , Dim_Ode
     basis ( ind+Dim_Time , ind ) = Ridge_Parameter
@@ -426,6 +448,7 @@ subroutine ConstructODE &!{{{
 ! Construct R^T stored in "r", then compute
 ! R^{-T} Sigma R^T
 ! R^{-T} Initial
+! R^{-T} Curve
 
   r = 0
 
@@ -457,6 +480,8 @@ subroutine ConstructODE &!{{{
   p_linear = matmul ( r , p_linear )
 
   Initial = matmul ( r , Initial )
+
+  p_curve = matmul ( r , p_curve )
 
 ! Reconstruct Q
 
@@ -507,6 +532,8 @@ subroutine ConstructODE &!{{{
   Initial = matmul ( r , Initial )
 
   p_linear = matmul ( r , p_linear )
+
+  p_curve = matmul ( r , p_curve )
 
   allocate ( iwork(Dim_Ode) )
   call dgetrf &
@@ -583,6 +610,9 @@ subroutine InverseEigen &!{{{
     , Rhobeg &
     , Rhoend &
     , Maxfun &
+!    , Linear &
+!    , Initial &
+!    , Curve &
   )
 
   implicit none
