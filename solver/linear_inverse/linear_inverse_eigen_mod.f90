@@ -27,6 +27,8 @@ module Linear_Ode_Inverse_Eigen_mod
 !    :: ResidueNewuoaObjective
 !  public &
 !    :: InverseEigen
+!  public &
+!    :: ConstructODE
 
 !  public &
 !    :: TestResidueNewuoaObjective
@@ -96,7 +98,7 @@ subroutine ResidualSumOfSquares &!{{{
   double precision , dimension(:,:) , pointer &
     :: p_observation
 
-  p_observation ( 1:Dim_Time , 1:Dim_Ode ) => Observation
+  p_observation ( 1:Dim_Ode , 1:Dim_Time ) => Observation
 
 ! Generate basis:
 !   Each column is a basis.
@@ -120,8 +122,6 @@ subroutine ResidualSumOfSquares &!{{{
   end do
 
 ! QR-decompose basis
-
-  Rss = 0
 
   allocate ( work(1) )
   lwork = -1
@@ -189,7 +189,7 @@ subroutine ResidualSumOfSquares &!{{{
 !   Residue is ||Y||^2 - ||Q^T Y||^2.
 
   Rss = sum ( p_observation**2 ) &
-    - sum ( matmul ( transpose(q(1:Dim_Time,:)) , p_observation ) **2 )
+    - sum ( matmul ( p_observation , q(1:Dim_Time,:) ) **2 )
 
 ! Uncomment following block to check
 !   cases with 0-eigenvalue with 2 time-points.
@@ -198,8 +198,8 @@ subroutine ResidualSumOfSquares &!{{{
 !  do ind = 1 , Dim_Ode
 !    zero_rss = zero_rss &
 !      + sum ( &
-!          ( p_observation(:,ind) &
-!            - sum(p_observation(:,ind))/Dim_Time &
+!          ( p_observation(ind,:) &
+!            - sum(p_observation(ind,:))/Dim_Time &
 !          ) **2 &
 !        )
 !  end do
@@ -282,22 +282,294 @@ end subroutine ResidueNewuoaObjective!}}}
 !
 !  end subroutine TestResidueNewuoaObjective!}}}
 
-!subroutine ConstructODE &!{{{
-!  ( &
-!    Dim_Ode &
-!    , Dim_Time &
-!    , Eigen &
-!    , Scaling &
-!    , Timepoint &
-!    , Observation &
-!    , Ridge_Parameter &
-!  )
-!
-!  implicit none
-!
-!  return
-!
-!end subroutine ConstructODE!}}}
+subroutine ConstructODE &!{{{
+  ( &
+    Dim_Ode &
+    , Dim_Time &
+    , Eigen &
+    , Timepoint &
+    , Observation &
+    , Ridge_Parameter &
+    , Linear &
+    , Initial &
+    , Info &
+  )
+
+  implicit none
+
+  integer , intent(in) &
+    :: Dim_Ode
+  integer , intent(in) &
+    :: Dim_Time
+  double precision , dimension(Dim_Ode) , intent(inout) &
+    :: Eigen
+  double precision , dimension(Dim_Time) , intent(in) , target &
+    :: Timepoint
+  double precision , dimension(Dim_Ode*Dim_Time) , intent(in) &
+    , target &
+    :: Observation
+  double precision , intent(in) &
+    :: Ridge_Parameter
+  double precision , dimension(Dim_Ode*Dim_Ode) , intent(out) &
+    , target &
+    :: Linear
+  double precision , dimension(Dim_Ode) , intent(out) &
+    :: Initial
+  integer , intent(out) &
+    :: Info
+! 0: Normal
+! 1: LU-factorize Q^T Y
+! 2: Inverse Q^T Y
+! 3: Inverse R
+! 255: QR-factorize basis
+! 254: Reconstruct Q
+! 253: LU-factorize Q^T Y
+! 252: Inverse Q^T Y
+! 251: Inverse R
+
+  double precision , dimension(Dim_Ode+Dim_Time,Dim_Ode) &
+    :: basis
+  double precision , dimension(Dim_Ode+Dim_Time,Dim_Ode) &
+    :: q
+  double precision , dimension(Dim_Ode,Dim_Ode) &
+    :: r
+
+  double precision , dimension(:) , allocatable &
+    :: work
+  integer , dimension(:) , allocatable &
+    :: iwork
+  integer &
+    :: ind
+  double precision , dimension(Dim_Ode) &
+    :: tau
+  integer &
+    :: info_i
+
+  double precision , dimension(:,:) , pointer &
+    :: p_linear
+  double precision , dimension(:,:) , pointer &
+    :: p_observation
+
+! Main target:
+!   Compute similarity transformation operator S and inverse
+!   by S = R^{-1} Q^T Y.
+!   Compute Linear output by: S Sigma S^{-1}
+
+  p_linear ( 1:Dim_Ode , 1:Dim_Ode ) => Linear
+  p_observation ( 1:Dim_Ode , 1:Dim_Time ) => Observation
+  Info = 0
+
+! Generate basis:
+!   Each column is a basis.
+!   A diagonal square matrix is binded to the bottom,
+!   used for ridge regression.
+!   Generate Sigma, stored in Linear.
+!   Generate Initial.
+
+  basis = 0
+  p_linear = 0
+  Initial = 0
+
+  allocate ( work(Dim_Time) )
+  do ind = 1 , Dim_Ode/2
+    work = dexp ( Eigen(ind) * Timepoint )
+    basis ( 1:Dim_Time , 2*ind-1 ) &
+      = work * dsin ( Eigen(ind+Dim_Ode/2) * Timepoint )
+    basis ( 1:Dim_Time , 2*ind ) &
+      = work * dcos ( Eigen(ind+Dim_Ode/2) * Timepoint )
+    p_linear ( 2*ind-1 , 2*ind-1 ) = Eigen(ind)
+    p_linear ( 2*ind , 2*ind ) = Eigen(ind)
+    p_linear ( 2*ind-1 , 2*ind ) = Eigen(ind+Dim_Ode/2)
+    p_linear ( 2*ind , 2*ind-1 ) = -Eigen(ind+Dim_Ode/2)
+    Initial ( 2*ind ) = 1
+  end do
+  deallocate ( work )
+
+  do ind = 1 , Dim_Ode
+    basis ( ind+Dim_Time , ind ) = Ridge_Parameter
+  end do
+
+! QR-decompose basis
+
+  allocate ( work(1) )
+  ind = -1
+  call dgeqrf ( &
+    Dim_Ode+Dim_Time &
+    , Dim_Ode &
+    , basis &
+    , Dim_Ode+Dim_Time &
+    , tau &
+    , work &
+    , ind &
+    , info_i &
+  )
+  ind = work(1)
+  deallocate ( work )
+  allocate ( work(ind) )
+  call dgeqrf ( &
+    Dim_Ode+Dim_Time &
+    , Dim_Ode &
+    , basis &
+    , Dim_Ode+Dim_Time &
+    , tau &
+    , work &
+    , ind &
+    , info_i &
+  )
+  deallocate ( work )
+
+  if ( info_i .lt. 0 ) then
+    Info = 255
+    stop
+  end if
+
+! Reconstruct Q
+
+  q = basis
+
+  allocate ( work(1) )
+  ind = -1
+  call dorgqr &
+    ( &
+      Dim_Ode+Dim_Time &
+      , Dim_Ode &
+      , Dim_Ode &
+      , q &
+      , Dim_Ode+Dim_Time &
+      , tau &
+      , work &
+      , ind &
+      , info_i &
+    )
+  ind = work(1)
+  deallocate ( work )
+  allocate ( work(ind) )
+  call dorgqr &
+    ( &
+      Dim_Ode+Dim_Time &
+      , Dim_Ode &
+      , Dim_Ode &
+      , q &
+      , Dim_Ode+Dim_Time &
+      , tau &
+      , work &
+      , ind &
+      , info_i &
+    )
+  deallocate ( work )
+
+  if ( info_i .lt. 0 ) then
+    Info = 254
+    stop
+  end if
+
+! Compute Q^T Y, saved in "r"
+
+  r = matmul ( transpose(q(1:Dim_Time,:)) , p_observation )
+
+! Compute (Q^T Y) Sigma (Q^T Y)^{-1}, (Q^T Y)Initial
+
+  Initial = matmul ( r , Initial )
+
+  p_linear = matmul ( r , p_linear )
+
+  allocate ( iwork(Dim_Ode) )
+  call dgetrf &
+    ( &
+      Dim_Ode &
+      , Dim_Ode &
+      , r &
+      , Dim_Ode &
+      , iwork &
+      , info_i &
+    )
+
+  if ( info_i .lt. 0 ) then
+    Info = 253
+    stop
+  end if
+
+  if ( info_i .gt. 0 ) then
+    Info = 1
+  end if
+
+  allocate ( work(1) )
+  ind = -1
+  call dgetri &
+    ( &
+      Dim_Ode &
+      , r &
+      , Dim_Ode &
+      , iwork &
+      , work &
+      , ind &
+      , info_i &
+    )
+  ind = work(1)
+  deallocate ( work )
+  allocate ( work(ind) )
+  call dgetri &
+    ( &
+      Dim_Ode &
+      , r &
+      , Dim_Ode &
+      , iwork &
+      , work &
+      , ind &
+      , info_i &
+    )
+  deallocate ( work )
+  deallocate ( iwork )
+
+  if ( info_i .lt. 0 ) then
+    Info = 252
+    stop
+  end if
+
+  if ( info_i .gt. 0 ) then
+    Info = 2
+  end if
+
+  p_linear = matmul ( p_linear , r )
+
+! Compute inverse of R,
+! then compute S Sigma S^{-1}, S Initial by
+! R^{-1} Q^T Y Sigma (Q^T Y)^{-1} R, R^{-1} Q^T Y Initial.
+
+  r = 0
+
+  do ind = 1 , Dim_Ode
+    r ( 1 : ind , ind ) = basis ( 1 : ind , ind )
+  end do
+
+  p_linear = matmul ( p_linear , r )
+
+  call dtrtri &
+    ( &
+      'U' &
+      , 'N' &
+      , Dim_Ode &
+      , r &
+      , Dim_Ode &
+      , info_i &
+    )
+
+  if ( info_i .lt. 0 ) then
+    Info = 251
+    stop
+  end if
+
+  if ( info_i .gt. 0 ) then
+    Info = 3
+  end if
+
+  p_linear = matmul ( r , p_linear )
+
+  Initial = matmul ( r , Initial )
+
+  return
+
+end subroutine ConstructODE!}}}
 
 !subroutine InverseEigen &!{{{
 !  ( &
