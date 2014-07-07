@@ -3,7 +3,7 @@
 
 program main
 
-  use Linear_Ode_Inverse_Eigen_mod
+  use Linear_Ode_Inverse_mod
 
   implicit none
 

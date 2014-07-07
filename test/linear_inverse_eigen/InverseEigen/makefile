@@ -2,20 +2,28 @@ all: inverse_eigen_test.out
 
 PATH_ROOT=$(PEODE)
 PATH_NEWUOA=$(PATH_ROOT)/solver/newuoa_dp
+PATH_RKF45=$(PATH_ROOT)/solver/rkf45
+PATH_LINEAR_MODEL=$(PATH_ROOT)/model/linear
+PATH_LINEAR_INVERSE=$(PATH_ROOT)/solver/linear_inverse
 PATH_TEST=$(PATH_ROOT)/test/linear_inverse_eigen/InverseEigen
-PATH_LINEAR_INVERSE_EIGEN=$(PATH_ROOT)/solver/linear_inverse
 
 COMPILER=gfortran
 STATIC_LIB_COMPILER=$(COMPILER) -c
 
 inverse_eigen_test.out: \
   bigden.o biglag.o newuoa.o newuob.o trsapp.o update.o \
+  rkf45.o machine.o \
+  linear_ode_mod.o \
   linear_inverse_eigen_mod.o \
+  linear_inverse_mod.o \
   inverse_eigen_test.o
 	$(COMPILER) \
 	  bigden.o biglag.o newuoa.o newuob.o \
 	  trsapp.o update.o \
+	  rkf45.o machine.o \
+	  linear_ode_mod.o \
 	  linear_inverse_eigen_mod.o \
+	  linear_inverse_mod.o \
 	  inverse_eigen_test.o \
 	  -llapack \
 	  -o inverse_eigen_test.out
@@ -38,11 +46,25 @@ trsapp.o: $(PATH_NEWUOA)/trsapp.f
 update.o: $(PATH_NEWUOA)/update.f
 	$(STATIC_LIB_COMPILER) $(PATH_NEWUOA)/update.f \
 	  -o update.o
+rkf45.o: $(PATH_RKF45)/rkf45.f
+	$(STATIC_LIB_COMPILER) $(PATH_RKF45)/rkf45.f \
+	  -o rkf45.o
+machine.o: $(PATH_RKF45)/machine.f
+	$(STATIC_LIB_COMPILER) $(PATH_RKF45)/machine.f \
+	  -o machine.o
+linear_ode_mod.o: $(PATH_LINEAR_MODEL)/linear_ode_mod.f90
+	$(STATIC_LIB_COMPILER) $(PATH_LINEAR_MODEL)/linear_ode_mod.f90 \
+	  -o linear_ode_mod.o
 linear_inverse_eigen_mod.o: \
-  $(PATH_LINEAR_INVERSE_EIGEN)/linear_inverse_eigen_mod.f90
+  $(PATH_LINEAR_INVERSE)/linear_inverse_eigen_mod.f90
 	$(STATIC_LIB_COMPILER) \
-	  $(PATH_LINEAR_INVERSE_EIGEN)/linear_inverse_eigen_mod.f90 \
+	  $(PATH_LINEAR_INVERSE)/linear_inverse_eigen_mod.f90 \
 	  -o linear_inverse_eigen_mod.o
+linear_inverse_mod.o: \
+  $(PATH_LINEAR_INVERSE)/linear_inverse_mod.f90
+	$(STATIC_LIB_COMPILER) \
+	  $(PATH_LINEAR_INVERSE)/linear_inverse_mod.f90 \
+	  -o linear_inverse_mod.o
 inverse_eigen_test.o: $(PATH_TEST)/inverse_eigen_test.f90
 	$(STATIC_LIB_COMPILER) $(PATH_TEST)/inverse_eigen_test.f90 \
 	  -o inverse_eigen_test.o
