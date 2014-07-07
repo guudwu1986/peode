@@ -21,14 +21,14 @@ module Linear_Ode_Inverse_Eigen_mod
   implicit none
   private
 
-  public &
-    :: ResidualSumOfSquares
+!  public &
+!    :: ResidualSumOfSquares
 !  public &
 !    :: ResidueNewuoaObjective
-!  public &
-!    :: InverseEigen
-!  public &
-!    :: ConstructODE
+  public &
+    :: InverseEigen
+  public &
+    :: ConstructODE
 
 !  public &
 !    :: TestResidueNewuoaObjective
@@ -320,12 +320,12 @@ subroutine ConstructODE &!{{{
 ! 0: Normal
 ! 1: LU-factorize Q^T Y
 ! 2: Inverse Q^T Y
-! 3: Inverse R
+! 3: Inverse R^T
 ! 255: QR-factorize basis
 ! 254: Reconstruct Q
 ! 253: LU-factorize Q^T Y
 ! 252: Inverse Q^T Y
-! 251: Inverse R
+! 251: Inverse R^T
 
   double precision , dimension(Dim_Ode+Dim_Time,Dim_Ode) &
     :: basis
@@ -352,7 +352,7 @@ subroutine ConstructODE &!{{{
 
 ! Main target:
 !   Compute similarity transformation operator S and inverse
-!   by S = R^{-1} Q^T Y.
+!   by S = Y Q R^{-T}.
 !   Compute Linear output by: S Sigma S^{-1}
 
   p_linear ( 1:Dim_Ode , 1:Dim_Ode ) => Linear
@@ -423,6 +423,41 @@ subroutine ConstructODE &!{{{
     stop
   end if
 
+! Construct R^T stored in "r", then compute
+! R^{-T} Sigma R^T
+! R^{-T} Initial
+
+  r = 0
+
+  do ind = 1 , Dim_Ode
+    r ( ind , 1 : ind ) = basis ( 1 : ind , ind )
+  end do
+
+  p_linear = matmul ( p_linear , r )
+
+  call dtrtri &
+    ( &
+      'L' &
+      , 'N' &
+      , Dim_Ode &
+      , r &
+      , Dim_Ode &
+      , info_i &
+    )
+
+  if ( info_i .lt. 0 ) then
+    Info = 251
+    stop
+  end if
+
+  if ( info_i .gt. 0 ) then
+    Info = 3
+  end if
+
+  p_linear = matmul ( r , p_linear )
+
+  Initial = matmul ( r , Initial )
+
 ! Reconstruct Q
 
   q = basis
@@ -463,11 +498,11 @@ subroutine ConstructODE &!{{{
     stop
   end if
 
-! Compute Q^T Y, saved in "r"
+! Compute YQ, saved in "r"
 
-  r = matmul ( transpose(q(1:Dim_Time,:)) , p_observation )
+  r = matmul ( p_observation , q(1:Dim_Time,:) )
 
-! Compute (Q^T Y) Sigma (Q^T Y)^{-1}, (Q^T Y)Initial
+! Compute YQ Sigma (YQ)^{-1}, YQ Initial
 
   Initial = matmul ( r , Initial )
 
@@ -532,120 +567,85 @@ subroutine ConstructODE &!{{{
 
   p_linear = matmul ( p_linear , r )
 
-! Compute inverse of R,
-! then compute S Sigma S^{-1}, S Initial by
-! R^{-1} Q^T Y Sigma (Q^T Y)^{-1} R, R^{-1} Q^T Y Initial.
-
-  r = 0
-
-  do ind = 1 , Dim_Ode
-    r ( 1 : ind , ind ) = basis ( 1 : ind , ind )
-  end do
-
-  p_linear = matmul ( p_linear , r )
-
-  call dtrtri &
-    ( &
-      'U' &
-      , 'N' &
-      , Dim_Ode &
-      , r &
-      , Dim_Ode &
-      , info_i &
-    )
-
-  if ( info_i .lt. 0 ) then
-    Info = 251
-    stop
-  end if
-
-  if ( info_i .gt. 0 ) then
-    Info = 3
-  end if
-
-  p_linear = matmul ( r , p_linear )
-
-  Initial = matmul ( r , Initial )
-
   return
 
 end subroutine ConstructODE!}}}
 
-!subroutine InverseEigen &!{{{
-!  ( &
-!    Dim_Ode &
-!    , Dim_Time &
-!    , Eigen &
-!    , Scaling &
-!    , Timepoint &
-!    , Observation &
-!    , Ridge_Parameter &
-!    , Rhobeg &
-!    , Rhoend &
-!    , Maxfun &
-!  )
-!
-!  implicit none
-!
-!  integer , intent(in) &
-!    :: Dim_Ode
-!  integer , intent(in) &
-!    :: Dim_Time
-!  double precision , dimension(Dim_Ode) , intent(inout) &
-!    :: Eigen
-!  double precision , dimension(Dim_Ode) , intent(in) , target &
-!    :: Scaling
-!  double precision , dimension(Dim_Time) , intent(in) , target &
-!    :: Timepoint
-!  double precision , dimension(Dim_Ode*Dim_Time) , intent(in) &
-!    , target &
-!    :: Observation
-!  double precision , intent(in) &
-!    :: Ridge_Parameter
-!  double precision , intent(in) &
-!    :: Rhobeg
-!  double precision , intent(in) &
-!    :: Rhoend
-!  integer , intent(in) &
-!    :: Maxfun
-!
-!  integer &
-!    :: iprint = 3
-!
-!  double precision , &
-!    dimension ( (15*Dim_Ode+97)*Dim_Ode/2+14 ) &
-!    :: work
-!
-!  interface
-!    SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W,CALFUN)
-!      IMPLICIT double precision (A-H,O-Z)
-!      DIMENSION X(*),W(*)
-!      external CALFUN
-!    end SUBROUTINE NEWUOA
-!  end interface
-!
-!  m_dim_time = Dim_Time
-!  m_ridge_parameter = Ridge_Parameter
-!
-!  mp_scaling => Scaling
-!  mp_timepoint => Timepoint
-!  mp_observation => Observation
-!
-!  call newuoa &
-!    ( &
-!      Dim_Ode &
-!      , 2*Dim_Ode+1 &
-!      , Eigen &
-!      , Rhobeg &
-!      , Rhoend &
-!      , iprint &
-!      , Maxfun &
-!      , work &
-!      , ResidueNewuoaObjective &
-!    )
-!
-!  return
-!
-!end subroutine InverseEigen!}}}
+subroutine InverseEigen &!{{{
+  ( &
+    Dim_Ode &
+    , Dim_Time &
+    , Eigen &
+    , Scaling &
+    , Timepoint &
+    , Observation &
+    , Ridge_Parameter &
+    , Rhobeg &
+    , Rhoend &
+    , Maxfun &
+  )
+
+  implicit none
+
+  integer , intent(in) &
+    :: Dim_Ode
+  integer , intent(in) &
+    :: Dim_Time
+  double precision , dimension(Dim_Ode) , intent(inout) &
+    :: Eigen
+  double precision , dimension(Dim_Ode) , intent(in) , target &
+    :: Scaling
+  double precision , dimension(Dim_Time) , intent(in) , target &
+    :: Timepoint
+  double precision , dimension(Dim_Ode*Dim_Time) , intent(in) &
+    , target &
+    :: Observation
+  double precision , intent(in) &
+    :: Ridge_Parameter
+  double precision , intent(in) &
+    :: Rhobeg
+  double precision , intent(in) &
+    :: Rhoend
+  integer , intent(in) &
+    :: Maxfun
+
+  integer &
+    :: iprint = 3
+
+  double precision , &
+    dimension ( (15*Dim_Ode+97)*Dim_Ode/2+14 ) &
+    :: work
+
+  interface
+    SUBROUTINE NEWUOA (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W,CALFUN)
+      IMPLICIT double precision (A-H,O-Z)
+      DIMENSION X(*),W(*)
+      external CALFUN
+    end SUBROUTINE NEWUOA
+  end interface
+
+  m_dim_time = Dim_Time
+  m_ridge_parameter = Ridge_Parameter
+
+  mp_scaling => Scaling
+  mp_timepoint => Timepoint
+  mp_observation => Observation
+
+  call newuoa &
+    ( &
+      Dim_Ode &
+      , 2*Dim_Ode+1 &
+      , Eigen &
+      , Rhobeg &
+      , Rhoend &
+      , iprint &
+      , Maxfun &
+      , work &
+      , ResidueNewuoaObjective &
+    )
+
+  return
+
+end subroutine InverseEigen!}}}
 
 end module Linear_Ode_Inverse_Eigen_mod
