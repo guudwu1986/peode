@@ -7,6 +7,9 @@
 !     Solve a sparse linear-ODE system via NEWUOA-solver.
 !   InverseEigen:
 !     Solve a linear-ODE system via eigenvalue-updating.
+!   InverseEigenLasso:
+!     Solve a sparse linear-ODE system via eigenvalue-updating
+!     with LASSO term.
 
 module Linear_Ode_Inverse_mod
 
@@ -20,6 +23,7 @@ module Linear_Ode_Inverse_mod
   public :: InverseNewuoa
   public :: InverseNewuoaSparse
   public :: InverseEigen
+  public :: InverseEigenLasso
 
   integer &
     :: m_dim_ode
